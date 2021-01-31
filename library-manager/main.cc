@@ -66,11 +66,52 @@ class Library {
 	unordered_map<string,User*> users;
 	User* currUser;
 public:
-	Library() {}
+	Library() : Library("","") {}
 
-	Library(string books, string users) {}
+	Library(string books, string users) : Library(*(new ifstream(books,ios::in)),*(new ifstream(users,ios::in))) { }
 
-	Library(ifstream books, ifstream users) {}
+	Library(ifstream& bookstream, ifstream& userstream) : currUser(NULL) {
+		string txt = filetostring(bookstream);
+		for(auto& i: parsexml(txt,"book")) {
+			string barcode = parsexml(i,"barcode")[0];
+			string name = parsexml(i,"name")[0];
+			string author = parsexml(i,"author")[0];
+			books.insert(pair<string,Book*>(barcode,new Book(barcode,name,author)));
+		}
+
+		//txt = filetostring(userstream);
+		for(auto& i: parsexml(txt,"user")) {
+			string id = parsexml(i,"id")[0];
+			string name = parsexml(i,"name")[0];
+			string password = parsexml(i,"password")[0];
+			users.insert(pair<string,User*>(id,new User(id,password,name)));
+		}
+	}
+
+	vector<string> parsexml(string& txt, string tag) {
+		vector<string> collections;
+		int start = 0;
+		while(true) {
+			start = txt.find("<"+tag,start); if(start == string::npos) break;
+			start = txt.find(">",start); start++;
+
+			int pos = txt.find("</"+tag,start); if(pos == string::npos) break;
+			collections.push_back(txt.substr(start,pos));
+			start = pos;
+		}
+		return collections;
+	}
+
+	string filetostring(ifstream& in) {
+		string buffer = "";
+		while(in.is_open() && !in.eof()) {
+			string line;
+			getline(in,line);
+			buffer+=line;
+		}
+		return buffer;
+	}
+
 
 	void search(string key) {
 		unordered_map<string,Book*>::iterator it = books.find(key);
@@ -167,7 +208,7 @@ public:
 
 
 int main() {
-	Library* lib = new Library("books.data","users.data");
+	Library* lib = new Library("books.xml","users.xml");
 	while(true) {
 		int choice;
 		string s;

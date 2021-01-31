@@ -18,7 +18,7 @@ public:
 	string getpassword() const { return password; }
 	
 	string getname() const { return name; }
-
+        
 	void borrow(string barcode) {
 		unordered_map<string,int>::iterator it = books.find(barcode);
 		if(it == books.end()) {
@@ -79,7 +79,7 @@ public:
 			books.insert(pair<string,Book*>(barcode,new Book(barcode,name,author)));
 		}
 
-		//txt = filetostring(userstream);
+		txt = filetostring(userstream);
 		for(auto& i: parsexml(txt,"user")) {
 			string id = parsexml(i,"id")[0];
 			string name = parsexml(i,"name")[0];
@@ -96,7 +96,7 @@ public:
 			start = txt.find(">",start); start++;
 
 			int pos = txt.find("</"+tag,start); if(pos == string::npos) break;
-			collections.push_back(txt.substr(start,pos));
+			collections.push_back(txt.substr(start,pos-start));
 			start = pos;
 		}
 		return collections;
@@ -212,21 +212,23 @@ int main() {
 	while(true) {
 		int choice;
 		string s;
-		cout << "1. Search" << endl << "2. Query" << "3. Borrow" << endl << "4. Return" << endl << "5.Exit" << endl;
+		cout << "1. Search" << endl << "2. Query" << endl << "3. Borrow" << endl << "4. Return" << endl << "5.Exit" << endl;
 		cin >> choice;
 		switch(choice) {
 			case 1:
-				cout << "Search by Book name, Barcode No, or Author : ";
+				cout << "Search by Book Barcode No: ";
 				cin >> s;
 				lib->search(s);
 				break;
 			case 2:
-				while(!lib->login());
+				if(!lib->loggedin())
+                                       while(!lib->login());
 				for(auto& e : lib->userDetails())
 				       cout << e << endl;
 				break;
 			case 3:
-				while(!lib->login());
+				if(!lib->loggedin())
+                                       while(!lib->login());
 				cout << "Enter the book Barcode No : ";
 				cin >> s;
 				lib->borrow(s);
@@ -238,7 +240,8 @@ int main() {
 				break;
 			case 5:
 				return 0;
-			default:
+
+		default:
 				break;
 		}
 	}
